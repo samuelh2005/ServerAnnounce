@@ -21,5 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "ServerAnnounce"
 
-include(":clients:common")
-include(":clients:fabric")
+include(":common")
+include(":platforms:server:fabric")

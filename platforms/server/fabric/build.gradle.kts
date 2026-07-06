@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    api(project(":clients:common"))
+    api(project(":common"))
 
     // To change the versions see the gradle.properties file
     minecraft("com.mojang:minecraft:${providers.gradleProperty("minecraft_version").get()}")
