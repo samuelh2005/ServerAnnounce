@@ -1,0 +1,11 @@
+{
+  "name": "server-announce",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.22.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @server-announce/backend dev",
+    "typecheck": "pnpm -r typecheck"
+  }
+}
