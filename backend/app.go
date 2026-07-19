@@ -10,6 +10,18 @@ import (
 	"github.com/samuelh2005/ServerAnnounce/backend/config"
 )
 
+type ServerResponse struct {
+	Name       string `json:"name"`
+	Address    string `json:"address"`
+	ForcedHost string `json:"forced_host,omitempty"`
+	Expiry     int64  `json:"expiry"`
+}
+
+type ServersResponse struct {
+	Groups  map[string][]ServerResponse `json:"groups,omitempty"`
+	Servers []ServerResponse            `json:"servers,omitempty"`
+}
+
 func main() {
 	// Load the configuration file from the CLI argument or ENV variable.
 	configPath := os.Getenv("CONFIG_PATH")
@@ -50,42 +62,37 @@ func main() {
 		// expiry allows the proxy to refresh if config changes or we add dynamic servers later.
 		expiry := time.Now().Add(time.Duration(cfg.Server.DefaultServerExpiry) * time.Second).Unix()
 
-		// We need to rebuild the response rather then just pulling from the config because we need to add the expiry time to each server.
-		response := make([]fiber.Map, len(cfg.Servers))
-		for i, server := range cfg.Servers {
-			// If the server has a group, we will include it in the response. Otherwise, we will not include it.
-			if server.Group != "" && server.ForcedHost != "" {
-				response[i] = fiber.Map{
-					"name":    server.Name,
-					"address": server.Address,
-					"group":   server.Group,
-					"expiry":  expiry,
-				}
-			} else if server.ForcedHost != "" {
-				response[i] = fiber.Map{
-					"name":        server.Name,
-					"address":     server.Address,
-					"forced_host": server.ForcedHost,
-					"expiry":      expiry,
-				}
-			} else if server.Group != "" {
-				response[i] = fiber.Map{
-					"name":    server.Name,
-					"address": server.Address,
-					"group":   server.Group,
-					"expiry":  expiry,
-				}
-			} else {
-				response[i] = fiber.Map{
-					"name":    server.Name,
-					"address": server.Address,
-					"expiry":  expiry,
-				}
-			}
+		response := ServersResponse{
+			Groups: make(map[string][]ServerResponse),
 		}
-		return c.JSON(fiber.Map{
-			"servers": response,
-		})
+
+		for _, server := range cfg.Servers {
+			entry := ServerResponse{
+				Name:       server.Name,
+				Address:    server.Address,
+				ForcedHost: server.ForcedHost,
+				Expiry:     expiry,
+			}
+
+			if server.Group == "" {
+				response.Servers = append(response.Servers, entry)
+				continue
+			}
+
+			response.Groups[server.Group] = append(response.Groups[server.Group], entry)
+		}
+
+		// Avoid returning an empty groups object.
+		if len(response.Groups) == 0 {
+			response.Groups = nil
+		}
+
+		// Avoid returning an empty servers array.
+		if len(response.Servers) == 0 {
+			response.Servers = nil
+		}
+
+		return c.JSON(response)
 	})
 
 	// Start the server on the port specified in the configuration file
