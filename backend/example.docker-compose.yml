@@ -1,0 +1,10 @@
+services:
+  backend:
+    build: .
+    container_name: serverannounce-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - CONFIG_PATH=/config.yaml
+    volumes:
+      - ./config.example.yaml:/config.yaml
