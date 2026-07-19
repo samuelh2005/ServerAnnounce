@@ -1,0 +1,14 @@
+server:
+  port: 3000
+  default_server_expiry: 300
+
+servers:
+  - name: lobby2
+    address: 10.0.0.20:25565
+    group: lobby
+
+  - name: server1
+    address: 10.0.0.30:25566
+
+  - name: server2
+    address: 10.0.0.40:25567
