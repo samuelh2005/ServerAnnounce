@@ -11,9 +11,10 @@ import (
 )
 
 type Server struct {
-	Name    string `koanf:"name"`
-	Address string `koanf:"address"`
-	Group   string `koanf:"group,omitempty"`
+	Name       string `koanf:"name"`
+	Address    string `koanf:"address"`
+	Group      string `koanf:"group,omitempty"`
+	ForcedHost string `koanf:"forced_host,omitempty"`
 }
 
 type Config struct {

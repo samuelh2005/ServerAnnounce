@@ -54,7 +54,21 @@ func main() {
 		response := make([]fiber.Map, len(cfg.Servers))
 		for i, server := range cfg.Servers {
 			// If the server has a group, we will include it in the response. Otherwise, we will not include it.
-			if server.Group != "" {
+			if server.Group != "" && server.ForcedHost != "" {
+				response[i] = fiber.Map{
+					"name":    server.Name,
+					"address": server.Address,
+					"group":   server.Group,
+					"expiry":  expiry,
+				}
+			} else if server.ForcedHost != "" {
+				response[i] = fiber.Map{
+					"name":        server.Name,
+					"address":     server.Address,
+					"forced_host": server.ForcedHost,
+					"expiry":      expiry,
+				}
+			} else if server.Group != "" {
 				response[i] = fiber.Map{
 					"name":    server.Name,
 					"address": server.Address,

@@ -12,3 +12,4 @@ servers:
 
   - name: server2
     address: 10.0.0.40:25567
+    forced_host: server2.example.com
