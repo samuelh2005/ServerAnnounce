@@ -14,7 +14,7 @@ import me.samuelh2005.server_announce.Types.Server;
 import me.samuelh2005.server_announce.Types.ServersResponse;
 
 public class ServerAnnounceAPI {
-    private final String baseUrl;
+    private final RawAPIClient apiClient;
     private final long cleanupIntervalMillis;
 
     // id -> Server: the single canonical store. Server.name() is the id.
@@ -24,7 +24,7 @@ public class ServerAnnounceAPI {
     private final List<ServerEventListener> listeners = new CopyOnWriteArrayList<>();
 
     private ServerAnnounceAPI(String baseUrl, long cleanupIntervalMillis) {
-        this.baseUrl = baseUrl;
+        this.apiClient = new RawAPIClient(baseUrl);
         this.cleanupIntervalMillis = cleanupIntervalMillis;
         Thread refreshThread = new Thread(new RefreshTask(this));
         refreshThread.setDaemon(true);
@@ -124,7 +124,7 @@ public class ServerAnnounceAPI {
 
                 ServersResponse response;
                 try {
-                    response = RawAPIClient.fetchServers(api.baseUrl);
+                    response = api.apiClient.fetchServers();
                 } catch (Exception e) {
                     // Don't wipe existing state just because a single fetch failed.
                     continue;
