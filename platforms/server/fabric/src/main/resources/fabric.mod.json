@@ -8,9 +8,10 @@
 		"samuelh2005"
 	],
 	"contact": {
-		"sources": "https://github.com/samuelh2005/ServerAnnounce"
+		"sources": "https://github.com/samuelh2005/ServerAnnounce",
+		"issues": "https://github.com/samuelh2005/ServerAnnounce/issues"
 	},
-	"license": "GPL-3.0",
+	"license": "LGPL-3.0",
 	"icon": "assets/server-announce/icon.png",
 	"environment": "*",
 	"entrypoints": {
