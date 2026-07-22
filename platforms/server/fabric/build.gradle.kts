@@ -5,6 +5,7 @@ plugins {
 
 version = providers.gradleProperty("mod_version").get()
 group = providers.gradleProperty("maven_group").get()
+
 val fabric_api_version = providers.gradleProperty("fabric_api_version").get()
 val yacl_version = providers.gradleProperty("yacl_version").get()
 
@@ -68,8 +69,19 @@ java {
 }
 
 tasks.jar {
-    val projectName = project.name
+    val projectName = "server-announce-fabric"
     inputs.property("projectName", projectName)
+    archiveBaseName.set(projectName)
+
+    from("LICENSE") {
+        rename { "${it}_$projectName" }
+    }
+}
+
+tasks.named<Jar>("sourcesJar") {
+    val projectName = "server-announce-fabric"
+    inputs.property("projectName", projectName)
+    archiveBaseName.set(projectName)
 
     from("LICENSE") {
         rename { "${it}_$projectName" }
