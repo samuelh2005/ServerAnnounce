@@ -1,5 +1,7 @@
 package me.samuelh2005.server_announce;
 
+import me.samuelh2005.server_announce.Types.Server;
+
 /**
  * A single change detected during a refresh cycle.
  * Server add/remove/update are global (servers are a single canonical store).

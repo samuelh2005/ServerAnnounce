@@ -10,6 +10,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import me.samuelh2005.server_announce.Types.Server;
+import me.samuelh2005.server_announce.Types.ServersResponse;
+
 public class ServerAnnounceAPI {
     private final String baseUrl;
     private final long cleanupIntervalMillis;
@@ -18,7 +21,7 @@ public class ServerAnnounceAPI {
     private final Map<String, Server> servers = new ConcurrentHashMap<>();
     // group -> set of server ids currently in that group
     private final Map<String, Set<String>> groups = new ConcurrentHashMap<>();
-    private final List<ServerAnnounceListener> listeners = new CopyOnWriteArrayList<>();
+    private final List<ServerEventListener> listeners = new CopyOnWriteArrayList<>();
 
     private ServerAnnounceAPI(String baseUrl, long cleanupIntervalMillis) {
         this.baseUrl = baseUrl;
@@ -74,17 +77,17 @@ public class ServerAnnounceAPI {
         return result;
     }
 
-    public void addListener(ServerAnnounceListener listener) {
+    public void addListener(ServerEventListener listener) {
         listeners.add(listener);
     }
 
-    public void removeListener(ServerAnnounceListener listener) {
+    public void removeListener(ServerEventListener listener) {
         listeners.remove(listener);
     }
 
     private void dispatch(List<ServerEvent> events) {
         for (ServerEvent event : events) {
-            for (ServerAnnounceListener listener : listeners) {
+            for (ServerEventListener listener : listeners) {
                 listener.onServerEvent(event);
             }
         }
@@ -119,9 +122,9 @@ public class ServerAnnounceAPI {
                     break;
                 }
 
-                Requests.ServersResponse response;
+                ServersResponse response;
                 try {
-                    response = Requests.fetchServers(api.baseUrl);
+                    response = RawAPIClient.fetchServers(api.baseUrl);
                 } catch (Exception e) {
                     // Don't wipe existing state just because a single fetch failed.
                     continue;
