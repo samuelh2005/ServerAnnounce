@@ -5,6 +5,8 @@ plugins {
 
 version = providers.gradleProperty("mod_version").get()
 group = providers.gradleProperty("maven_group").get()
+val fabric_api_version = providers.gradleProperty("fabric_api_version").get()
+val yacl_version = providers.gradleProperty("yacl_version").get()
 
 repositories {
     // Add repositories to retrieve artifacts from in here.
@@ -12,6 +14,9 @@ repositories {
     // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
     // See https://docs.gradle.org/current/userguide/declaring_repositories.html
     // for more information about repositories.
+    maven("https://maven.isxander.dev/releases") {
+        name = "Xander Maven"
+    }
 }
 
 dependencies {
@@ -21,16 +26,30 @@ dependencies {
     minecraft("com.mojang:minecraft:${providers.gradleProperty("minecraft_version").get()}")
     implementation("net.fabricmc:fabric-loader:${providers.gradleProperty("loader_version").get()}")
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    implementation("net.fabricmc.fabric-api:fabric-api:${providers.gradleProperty("fabric_api_version").get()}")
+    // Fabric API.
+    implementation("net.fabricmc.fabric-api:fabric-api:${fabric_api_version}")
+
+    // Yet Another Config Library.
+    implementation("dev.isxander:yet-another-config-lib:${yacl_version}")
 }
 
 tasks.processResources {
     val version = version
+    val fabric_api_version = fabric_api_version
+    val yacl_version = yacl_version
+
     inputs.property("version", version)
+    inputs.property("fabric_api_version", fabric_api_version)
+    inputs.property("yacl_version", yacl_version)
 
     filesMatching("fabric.mod.json") {
-        expand("version" to version)
+        expand(
+            mapOf(
+                "version" to version,
+                "fabric_api_version" to fabric_api_version,
+                "yacl_version" to yacl_version
+            )
+        )
     }
 }
 

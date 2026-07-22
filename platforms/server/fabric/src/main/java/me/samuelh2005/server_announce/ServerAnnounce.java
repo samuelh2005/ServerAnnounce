@@ -15,6 +15,8 @@ public class ServerAnnounce implements ModInitializer {
 	// That way, it's clear which mod wrote info, warnings, and errors.
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+	public static ServerAnnounceAPI INSTANCE;
+
 	@Override
 	public void onInitialize() {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -22,6 +24,15 @@ public class ServerAnnounce implements ModInitializer {
 		// Proceed with mild caution.
 
 		LOGGER.info("Hello Fabric world!");
+
+		ServerAnnounceModConfig.HANDLER.load();
+
+		ServerAnnounceModConfig config = ServerAnnounceModConfig.HANDLER.instance();
+
+		INSTANCE = ServerAnnounceAPI.builder()
+				.setBaseUrl(config.baseUrl)
+				.setCleanupInterval(config.cleanupIntervalMillis)
+				.build();
 	}
 
 	public static Identifier id(String path) {
