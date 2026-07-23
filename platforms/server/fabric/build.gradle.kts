@@ -1,5 +1,8 @@
+import org.gradle.api.attributes.Usage
+
 plugins {
     id("net.fabricmc.fabric-loom")
+    id("com.gradleup.shadow")
     `maven-publish`
 }
 
@@ -20,8 +23,22 @@ repositories {
     }
 }
 
+// Dependencies added here are bundled into the mod jar (with their full transitive
+// dependency graph) via the Shadow plugin. Loom's own `include` (jar-in-jar) mechanism
+// is intentionally NOT used for this, because it does not resolve transitive
+// dependencies: it would only bundle :common itself, not okhttp/jackson/etc. that
+// :common depends on, which is exactly what was causing the runtime crash.
+val shade: Configuration = configurations.create("shade") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, project.objects.named(Usage::class.java, Usage.JAVA_RUNTIME))
+    }
+}
+
 dependencies {
-    api(project(":common"))
+    implementation(project(":common"))
+    shade(project(":common"))
 
     // To change the versions see the gradle.properties file
     minecraft("com.mojang:minecraft:${providers.gradleProperty("minecraft_version").get()}")
@@ -32,6 +49,47 @@ dependencies {
 
     // Yet Another Config Library.
     implementation("dev.isxander:yet-another-config-lib:${yacl_version}")
+}
+
+tasks.shadowJar {
+    val projectName = "server-announce-fabric"
+    inputs.property("projectName", projectName)
+    archiveBaseName.set(projectName)
+    // Empty classifier: this is the primary, "real" artifact that gets installed on a
+    // server, so it should have the normal file name (no "-shadow"/"-all" suffix).
+    archiveClassifier.set("")
+
+    from("LICENSE") {
+        rename { "${it}_$projectName" }
+    }
+
+    // Only merge in :common and its own third-party dependencies (okhttp, jackson, ...).
+    // Without this, shadowJar would default to the whole runtime classpath and also
+    // bundle Minecraft, Fabric Loader, Fabric API and YACL into the mod jar.
+    configurations = listOf(shade)
+
+    // Avoid duplicate/broken entries when merging multiple library jars together.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude("module-info.class")
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    mergeServiceFiles()
+
+    // Relocate the bundled libraries so they can't collide with a different version of
+    // the same library bundled by some other mod on the same server/classpath.
+    relocate("okhttp3", "me.samuelh2005.server_announce.shadow.okhttp3")
+    relocate("okio", "me.samuelh2005.server_announce.shadow.okio")
+    relocate("tools.jackson", "me.samuelh2005.server_announce.shadow.tools.jackson")
+    relocate("com.fasterxml.jackson", "me.samuelh2005.server_announce.shadow.com.fasterxml.jackson")
+}
+
+// Minecraft 26.2 is unobfuscated, so Loom runs in "non-remapping" mode here: there is
+// no separate remap step, and the plain `jar` task's output *is* the final mod jar
+// (no `remapJar` task exists to redirect, unlike on older, obfuscated Minecraft
+// versions). So instead of pointing a remapJar task at the shaded jar, shadowJar
+// itself is configured (below, alongside the plain jar task) to be the artifact that
+// actually ships, containing :common's classes plus its bundled dependencies.
+tasks.named("assemble") {
+    dependsOn(tasks.shadowJar)
 }
 
 tasks.processResources {
@@ -72,6 +130,11 @@ tasks.jar {
     val projectName = "server-announce-fabric"
     inputs.property("projectName", projectName)
     archiveBaseName.set(projectName)
+    // shadowJar (below) is the primary artifact that actually gets shipped/installed,
+    // since it's the one that bundles :common and its dependencies. This plain jar
+    // (just the mod's own compiled classes, no dependencies) is kept around under a
+    // distinct classifier purely so it doesn't collide with shadowJar's output file.
+    archiveClassifier.set("slim")
 
     from("LICENSE") {
         rename { "${it}_$projectName" }
@@ -92,7 +155,10 @@ tasks.named<Jar>("sourcesJar") {
 publishing {
     publications {
         register<MavenPublication>("mavenJava") {
-            from(components["java"])
+            // Publish the shaded jar (contains :common + its dependencies), not the
+            // plain "java" component, which would only be the dependency-free jar.
+            artifact(tasks.shadowJar)
+            artifact(tasks.named("sourcesJar"))
         }
     }
 
