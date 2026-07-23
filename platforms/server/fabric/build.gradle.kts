@@ -73,13 +73,6 @@ tasks.shadowJar {
     exclude("module-info.class")
     exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
     mergeServiceFiles()
-
-    // Relocate the bundled libraries so they can't collide with a different version of
-    // the same library bundled by some other mod on the same server/classpath.
-    relocate("okhttp3", "me.samuelh2005.server_announce.shadow.okhttp3")
-    relocate("okio", "me.samuelh2005.server_announce.shadow.okio")
-    relocate("tools.jackson", "me.samuelh2005.server_announce.shadow.tools.jackson")
-    relocate("com.fasterxml.jackson", "me.samuelh2005.server_announce.shadow.com.fasterxml.jackson")
 }
 
 // Minecraft 26.2 is unobfuscated, so Loom runs in "non-remapping" mode here: there is

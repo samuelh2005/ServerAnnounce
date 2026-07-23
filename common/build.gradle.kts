@@ -9,4 +9,6 @@ dependencies {
     implementation("tools.jackson.core:jackson-databind:3.2.1")
     // There is no v3 of jackson-annotations, so we use the latest v2 version
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.20.0") 
+    // SLF4J API
+    implementation("org.slf4j:slf4j-api:2.0.17")
 }
