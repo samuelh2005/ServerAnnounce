@@ -54,6 +54,17 @@ public class ServerCache {
         return result;
     }
 
+    public @Nullable String getGroupForServer(Server server) {
+        for (Map.Entry<String, Set<String>> entry : groups.entrySet()) {
+            String group = entry.getKey();
+            Set<String> members = entry.getValue();
+            if (members.contains(server.name())) {
+                return group;
+            }
+        }
+        return null;
+    }
+
     private void dispatch(ServerEvent event) {
         for (ServerEventListener listener : this.listeners) {
             listener.onServerEvent(event);
